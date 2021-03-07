@@ -1,4 +1,4 @@
-create OR REPLACE PROCEDURE get_columns_info(sch in varchar2, t in varchar2)
+create or replace PROCEDURE get_columns_info(sch in varchar2, t in varchar2)
     IS
     -- variables part
     tablename VARCHAR2(40) := t;
@@ -19,15 +19,18 @@ create OR REPLACE PROCEDURE get_columns_info(sch in varchar2, t in varchar2)
     constrName varchar2(128) := '';
     countReservedWords number := 0;
     countParamsExisting number := 0;
+    checkAllowTable number := 0;
 
     -- exception part
     schemaNotFound Exception;
     tableNotFound Exception;
     schemaContainsReservedWords Exception;
     tableContainsReservedWords Exception;
-    schemaNotValid Exception; 
-    tableNotValid Exception; 
-    
+    schemaNotValid Exception;
+    tableNotValid Exception;
+    tableNotAllowed Exception;
+    nameTooLong Exception;
+
 --     --exception init
 --     pragma exception_init ( tableNotValid, - 06550);
 --     pragma exception_init ( schemaNotValid, - 06550);
@@ -39,7 +42,7 @@ create OR REPLACE PROCEDURE get_columns_info(sch in varchar2, t in varchar2)
                     JOIN ALL_CONS_COLUMNS acc on ac.CONSTRAINT_NAME = acc.CONSTRAINT_NAME
                     JOIN ALL_TAB_COLUMNS atc on acc.COLUMN_NAME = atc.COLUMN_NAME and acc.TABLE_NAME = atc.TABLE_NAME
                     where atc.OWNER = schemaname and acc.TABLE_NAME = tablename;
-    
+
     cursor FIO is
     select ФАМИЛИЯ, ИМЯ from Н_ЛЮДИ where ИД =
       (select ЧЛВК_ИД from Н_УЧЕНИКИ where ИД = (select user_id from ALL_USERS where USERNAME = schemaname));
@@ -54,34 +57,49 @@ create OR REPLACE PROCEDURE get_columns_info(sch in varchar2, t in varchar2)
 
     BEGIN
         -- validation part
+        IF schemaname = '' then
+            raise schemaNotValid;
+        end if;
+
+        IF length(schemaname) > 30 or length(tablename) > 30 then
+            raise nameTooLong;
+        end if;
+
         select count(*) into countReservedWords from V$RESERVED_WORDS where KEYWORD=schemaname;
         if countReservedWords >0 then
             raise schemaContainsReservedWords;
         end if;
-        
+
         select count(*) into countReservedWords from V$RESERVED_WORDS where KEYWORD=tablename;
         if countReservedWords >0 then
             raise tableContainsReservedWords;
         end if;
-        
+
         select count(*) into countParamsExisting from DBA_USERS where USERNAME=schemaname;
         IF schemaname IS NULL or countParamsExisting = 0 then
             raise schemaNotFound;
         end if;
-        
-        IF schemaname = '' then
-            raise schemaNotValid;
+
+        DBMS_OUTPUT.PUT_LINE(tablename);
+        if not regexp_like(tablename, '[a-zA-Z1-9#$_]+|(".+")') then
+                raise tableNotValid;
         end if;
-        
+
+        IF tablename = '' then
+            raise tableNotValid;
+        end if;
+
         select count(*) into countParamsExisting from DBA_TABLES where TABLE_NAME=tablename;
         if tablename is NULL or countParamsExisting = 0 or tablename = ''  then
             raise tableNotFound;
         end if;
         
-        IF tablename = '' then
-            raise tableNotValid;
+        select count(username) into checkAllowTable from all_users where username like schemaname;
+        if checkAllowTable = 0 then
+            raise tableNotAllowed;
         end if;
-        
+    
+
         -- set user's info
         FOR fi IN FIO loop
             name := fi.ИМЯ;
@@ -90,9 +108,6 @@ create OR REPLACE PROCEDURE get_columns_info(sch in varchar2, t in varchar2)
 
         IF instr(tablename, '.') != 0 then
             anotherUser := substr(tablename,1,instr(tablename, '.'));
-        end if;
-        IF anotherUser != schemaname then
-            raise notAllowed;
         end if;
 
         -- set result table
@@ -137,13 +152,13 @@ create OR REPLACE PROCEDURE get_columns_info(sch in varchar2, t in varchar2)
                 WHEN tableContainsReservedWords THEN raise_application_error(- 20003, 'Table name contains reserved words');
                 WHEN schemaNotValid then raise_application_error(- 20004, 'Not valid input schema name');
                 WHEN tableNotValid then raise_application_error(- 20005, 'Not valid input table name');
-                
-                        
+                WHEN nameTooLong then raise_application_error(- 20006, 'Input value to loong!(length must be lower than 30)');
+                WHEN tableNotAllowed then raise_application_error(- 20007, 'You dont have permissions for this table');
     end get_columns_info;
 /
 SET SERVEROUT ON SIZE UNLIMITED;
-accept sch PROMPT 'Enter employee lastname:  ';
-ACCEPT t PROMPT 'Enter employee lastname:  ';
+accept sch PROMPT 'Enter schema name:  ';
+ACCEPT t PROMPT 'Enter table name:  ';
 BEGIN
     IF 'sch' is null then 
         raise_application_error(-1000, 'sss');
