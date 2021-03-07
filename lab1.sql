@@ -85,7 +85,7 @@ create or replace PROCEDURE get_columns_info(sch in varchar2, t in varchar2)
             raise schemaNotFound;
         end if;
 
-        if not regexp_like(tablename, '[a-zA-Z1-9#$_]+|(".+")') then
+        if not regexp_like(tablename, '^[a-zA-Z1-9#$_]$+|^(".+")$') then
                 raise tableNotValid;
         end if;
 
