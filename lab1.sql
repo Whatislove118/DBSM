@@ -57,6 +57,11 @@ create or replace PROCEDURE get_columns_info(sch in varchar2, t in varchar2)
 
     BEGIN
         -- validation part
+        IF not instr(tablename, '.') = 0 then
+            schemaname := substr(tablename, 1, instr(tablename, '.')-1);
+            tablename := substr(tablename, instr(tablename, '.')+1);
+        end if;
+
         IF schemaname = '' then
             raise schemaNotValid;
         end if;
@@ -80,7 +85,6 @@ create or replace PROCEDURE get_columns_info(sch in varchar2, t in varchar2)
             raise schemaNotFound;
         end if;
 
-        DBMS_OUTPUT.PUT_LINE(tablename);
         if not regexp_like(tablename, '[a-zA-Z1-9#$_]+|(".+")') then
                 raise tableNotValid;
         end if;
