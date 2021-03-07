@@ -57,6 +57,11 @@ create or replace PROCEDURE get_columns_info(sch in varchar2, t in varchar2)
 
     BEGIN
         -- validation part
+        
+        if not regexp_like(tablename, '^[a-zA-Z1-9#$_]+|(".+")$') or not regexp_like(schemaname, '^[a-zA-Z1-9#$_]+|(".+")$') then
+                raise tableNotValid;
+        end if;
+
         IF not instr(tablename, '.') = 0 then
             schemaname := substr(tablename, 1, instr(tablename, '.')-1);
             tablename := substr(tablename, instr(tablename, '.')+1);
@@ -83,10 +88,6 @@ create or replace PROCEDURE get_columns_info(sch in varchar2, t in varchar2)
         select count(*) into countParamsExisting from DBA_USERS where USERNAME=schemaname;
         IF schemaname IS NULL or countParamsExisting = 0 then
             raise schemaNotFound;
-        end if;
-
-        if not regexp_like(tablename, '^[a-zA-Z1-9#$_]$+|^(".+")$') then
-                raise tableNotValid;
         end if;
 
         IF tablename = '' then
@@ -155,7 +156,7 @@ create or replace PROCEDURE get_columns_info(sch in varchar2, t in varchar2)
                 WHEN schemaContainsReservedWords THEN raise_application_error(- 20002, 'Schema name contains reserved words');
                 WHEN tableContainsReservedWords THEN raise_application_error(- 20003, 'Table name contains reserved words');
                 WHEN schemaNotValid then raise_application_error(- 20004, 'Not valid input schema name');
-                WHEN tableNotValid then raise_application_error(- 20005, 'Not valid input table name');
+                WHEN tableNotValid then raise_application_error(- 20005, 'Not valid input table or schema name');
                 WHEN nameTooLong then raise_application_error(- 20006, 'Input value to loong!(length must be lower than 30)');
                 WHEN tableNotAllowed then raise_application_error(- 20007, 'You dont have permissions for this table');
     end get_columns_info;
