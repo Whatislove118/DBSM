@@ -21,6 +21,7 @@ create or replace PROCEDURE get_columns_info(sch in varchar2, t in varchar2)
     countParamsExisting number := 0;
     checkAllowTable number := 0;
     checkTab number := 0;
+    schemanameAttr Varchar2(40);
 
     -- exception part
     schemaNotFound Exception;
@@ -64,7 +65,7 @@ create or replace PROCEDURE get_columns_info(sch in varchar2, t in varchar2)
         end if;
 
         IF not instr(tablename, '.') = 0 then
-            schemaname := substr(tablename, 1, instr(tablename, '.')-1);
+            schemanameAttr := substr(tablename, 1, instr(tablename, '.')-1);
             tablename := substr(tablename, instr(tablename, '.')+1);
         end if;
 
@@ -100,10 +101,14 @@ create or replace PROCEDURE get_columns_info(sch in varchar2, t in varchar2)
             raise tableNotFound;
         end if;
         
-        select count(*) into checkTab from USER_TABLES where TABLE_NAME=tablename;
-        select count(*) into checkAllowTable from DBA_TAB_PRIVS where GRANTEE = schemaname and PRIVILEGE='SELECT';
-        if checkTab = 0 and checkAllowTable = 0 then
-            raise tableNotAllowed;
+        if schemanameAttr is NULL or schemanameAttr != schemaname then
+            select count(*) into checkAllowTable from ALL_TAB_PRIVS where GRANTEE = schemaname and PRIVILEGE='SELECT' and TABLE_NAME=tablename;
+            if checkAllowTable = 0 then
+                select count(*) into checkTab from ALL_TABLES where TABLE_NAME = tablename and OWNER=schemaname;
+                if checkTab = 0 then
+                    raise tableNotAllowed;
+                end if;
+            end if;
         end if;
     
     
@@ -116,10 +121,14 @@ create or replace PROCEDURE get_columns_info(sch in varchar2, t in varchar2)
 
         IF instr(tablename, '.') != 0 then
             anotherUser := substr(tablename,1,instr(tablename, '.'));
+
         end if;
 
         -- set result table
         DBMS_OUTPUT.PUT_LINE('Пользователь: ' || surname || ' ' || name || ' ' || '(' || schemaname || ')');
+        if schemanameAttr IS NOT NULL then
+            schemaname := schemanameAttr;
+        end if;    
         DBMS_OUTPUT.PUT_LINE('Таблица: ' || tableName);
         DBMS_OUTPUT.PUT_LINE('');
         DBMS_OUTPUT.PUT_LINE(RPAD(colNo, noLen) || ' ' || RPAD(colName, colLen) || ' ' || RPAD(colAttr, attrLen));
@@ -159,7 +168,7 @@ create or replace PROCEDURE get_columns_info(sch in varchar2, t in varchar2)
                 WHEN schemaContainsReservedWords THEN raise_application_error(- 20002, 'Schema name contains reserved words');
                 WHEN tableContainsReservedWords THEN raise_application_error(- 20003, 'Table name contains reserved words');
                 WHEN schemaNotValid then raise_application_error(- 20004, 'Not valid input schema name');
-                WHEN tableNotValid then raise_application_error(- 20005, 'Not valid input table or schema name');
+                WHEN tableNotValid then raise_application_error(- 20005, 'Not valid input table name');
                 WHEN nameTooLong then raise_application_error(- 20006, 'Input value to loong!(length must be lower than 30)');
                 WHEN tableNotAllowed then raise_application_error(- 20007, 'You dont have permissions for this table');
     end get_columns_info;
