@@ -1,6 +1,7 @@
+Задание значения необходимых для конфигурации переменных окружения
 export ORACLE_BASE=/u01/app/oracle
 export ORACLE_HOME=/u01/app/oracle/product/11.2.0/dbhome_1
-export ORACLE_SID='pochikalinvladislavp33112'
-export sqlplus=$ORACLE_HOME/bin/sqlplus
-export orapwd=$ORACLE_HOME/bin/orapwd
-export NLS_LANG=RUSSIAN_CIS.AL32UTF8
+export ORACLE_SID=pochikalin.vladislav.p33112
+PATH=$PATH:$ORACLE_HOME/bin
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib:/lib:/usr/lib:/usr/local/lib
+export NLS_LANG=American_America.UTF8
