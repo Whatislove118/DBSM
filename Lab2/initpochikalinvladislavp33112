@@ -1,7 +1,0 @@
-db_name='lastdata'
-db_domain=''
-enable_pluggable_database='TRUE'
-// db_create_file_dest='/u01/bpk98'
-db_block_size=4096
-sga_total=700M
-remote_login_passwordfile='EXCLUSIVE'

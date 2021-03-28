@@ -1,0 +1,15 @@
+db_name='lastdata'
+db_domain=''
+memory_target=1G
+processes=150
+audit_file_dest='/u01/app/oracle/admin/orcl/adump'
+audit_trail='db'
+db_block_size=4096
+sga_target=700M
+db_recovery_file_dest='/u01/app/oracle/recovery'
+db_recovery_file_dest_size=2G
+diagnostic_dest='/u01/app/oracle'
+open_cursors=200
+undo_tablespace='UNDOTS'
+remote_login_passwordfile='EXCLUSIVE'
+
