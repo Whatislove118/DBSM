@@ -1,0 +1,1 @@
+$orapwd file='orapw$ORACLE_SID' password='1234'

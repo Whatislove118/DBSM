@@ -1,5 +1,6 @@
 export ORACLE_BASE=/u01/app/oracle
 export ORACLE_HOME=/u01/app/oracle/product/11.2.0/dbhome_1
-export ORACLE_SID=$pochikalin$vladislav$p33112
+export ORACLE_SID='pochikalinvladislavp33112'
 export sqlplus=$ORACLE_HOME/bin/sqlplus
-export NLS_LANG=AMERICAN_AMERICA.UTF8
+export orapwd=$ORACLE_HOME/bin/orapwd
+export NLS_LANG=RUSSIAN_CIS.AL32UTF8
